@@ -1,6 +1,6 @@
 #!/bin/bash
 
-SERVER_URL=http://127.0.0.1:8000
+SERVER_URL="${SERVER_URL:-http://10.100.2.190}"
 
 function get_processors_json {
     PROCESSOR_MODELS=$(sudo dmidecode --string processor-version)
