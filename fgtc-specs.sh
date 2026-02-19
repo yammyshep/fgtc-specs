@@ -2,12 +2,20 @@
 
 SERVER_URL="${SERVER_URL:-http://10.100.2.190}"
 
-if ! command -v jq >/dev/null 2>&1; then
+function install_packages (packages) {
     if command -v apt >/dev/null 2>&1; then
-        sudo apt install jq
+        sudo apt install $packages
     elif command -v dnf >/dev/null 2>&1; then
-        sudo dnf install jq
+        sudo dnf install $packages
     fi
+}
+
+if ! command -v jq >/dev/null 2>&1; then
+    install_packages jq
+fi
+
+if ! command -v iw >/dev/null 2>&1; then
+    install_packages iw
 fi
 
 function get_processors_json {
