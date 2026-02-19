@@ -2,11 +2,11 @@
 
 SERVER_URL="${SERVER_URL:-http://10.100.2.190}"
 
-function install_packages (packages) {
+function install_packages () {
     if command -v apt >/dev/null 2>&1; then
-        sudo apt install $packages
+        sudo apt install $1
     elif command -v dnf >/dev/null 2>&1; then
-        sudo dnf install $packages
+        sudo dnf install $1
     fi
 }
 
