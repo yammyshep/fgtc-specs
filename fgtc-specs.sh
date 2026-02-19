@@ -80,6 +80,50 @@ function get_batteries_json {
     echo "$BATTERIES_JSON"
 }
 
+function get_storage_json {
+    local STORAGE_JSON="[]"
+    while read device; do
+        if [[ $(echo $device | cut -d' ' -f3) -eq "1" ]]; then
+            local type="hdd"
+        else
+            local type="ssd"
+        fi
+
+        local interface=$(echo $device | cut -d' ' -f2)
+
+        if [[ $interface == "ata" ]]; then
+            local interface="sata"
+        fi
+
+        if [[ $interface == "nvme" ]]; then
+            local form="m2"
+        elif [[ $interface == "sata" ]]; then
+            if [[ $type == "ssd" ]]; then
+                local form="2.5"
+            else
+                #TODO: Detect laptop hdds?
+                local form="3.5"
+            fi
+        else
+            local form="3.5"
+        fi
+
+        local STORAGE_JSON=$(echo $STORAGE_JSON | jq \
+            --arg type "$type" \
+            --arg form "$form" \
+            --arg interface "$interface" \
+            --arg size "$(($(echo $device | cut -d' ' -f4) / 1000000))" \
+            '. += [{
+                type: $type,
+                form: $form,
+                interface: $interface,
+                size: $size
+            }]'
+        )
+    done <<< $(lsblk -dbnl -o name,tran,rota,size | grep -Ev 'zram|usb')
+    echo "$STORAGE_JSON"
+}
+
 MANUFACTURER=($(sudo dmidecode --string system-manufacturer))
 MODEL=$(sudo dmidecode --string system-product-name)
 OPERATING_SYSTEM=$(cat /etc/*-release | awk '/PRETTY_NAME/' | cut -d\" -f2)
@@ -94,6 +138,7 @@ BUILD_JSON=$( jq -n \
     --arg bluetooth "$(get_bluetooth)" \
     --argjson processors "$(get_processors_json)" \
     --argjson memory "$(get_memory_json)" \
+    --argjson storage "$(get_storage_json)" \
     --argjson batteries "$(get_batteries_json)" \
     '{
         type: $type,
@@ -105,11 +150,12 @@ BUILD_JSON=$( jq -n \
         bluetooth: $bluetooth,
         processors: $processors,
         memory: $memory,
-        batteries: $batteries
+        batteries: $batteries,
+        storage: $storage
     }'
 )
 
-echo $BUILD_JSON
+echo "$BUILD_JSON" | jq .
 
 if [[ " $* " != *" --no-submit "* ]]; then
     RESPONSE=$(curl --json "$BUILD_JSON" ${SERVER_URL}/build 2> /dev/null)
@@ -118,7 +164,7 @@ if [[ " $* " != *" --no-submit "* ]]; then
     echo "Build ID: $ID"
     
     if [[ " $* " != *" --no-open "* ]]; then
-        xdg-open ${SERVER_URL}/build/create?edit=${ID}
+        xdg-open ${SERVER_URL}/build/create?edit=${ID} 2> /dev/null
     fi
 fi
 
