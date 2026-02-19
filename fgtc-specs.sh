@@ -2,6 +2,14 @@
 
 SERVER_URL="${SERVER_URL:-http://10.100.2.190}"
 
+if ! command -v jq >/dev/null 2>&1; then
+    if command -v apt >/dev/null 2>&1; then
+        sudo apt install jq
+    elif command -v dnf >/dev/null 2>&1; then
+        sudo dnf install jq
+    fi
+fi
+
 function get_processors_json {
     PROCESSOR_MODELS=$(sudo dmidecode --string processor-version)
 
@@ -124,12 +132,28 @@ function get_storage_json {
     echo "$STORAGE_JSON"
 }
 
+function get_device_type {
+    local chassis_type=$(hostnamectl chassis)
+
+    case $chassis_type in
+    laptop | convertable)
+        echo "laptop"
+        ;;
+    desktop)
+        echo "desktop"
+        ;;
+    *)
+        echo "other"
+        ;;
+    esac
+}
+
 MANUFACTURER=($(sudo dmidecode --string system-manufacturer))
 MODEL=$(sudo dmidecode --string system-product-name)
 OPERATING_SYSTEM=$(cat /etc/*-release | awk '/PRETTY_NAME/' | cut -d\" -f2)
 
 BUILD_JSON=$( jq -n \
-    --arg type "$(hostnamectl chassis)" \
+    --arg type "$(get_device_type)" \
     --arg manufacturer "$MANUFACTURER" \
     --arg model "$MODEL" \
     --arg os "$OPERATING_SYSTEM" \
@@ -168,3 +192,4 @@ if [[ " $* " != *" --no-submit "* ]]; then
     fi
 fi
 
+read -p "Press Enter to continue" </dev/tty
