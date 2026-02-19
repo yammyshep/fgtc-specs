@@ -191,5 +191,3 @@ if [[ " $* " != *" --no-submit "* ]]; then
         xdg-open ${SERVER_URL}/build/create?edit=${ID} 2> /dev/null
     fi
 fi
-
-read -p "Press Enter to continue" </dev/tty
