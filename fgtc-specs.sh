@@ -63,7 +63,7 @@ function get_wlan_standard {
     elif [[ $(grep "HT Capability" <<< $WIRELESS_INFO) ]]; then
         echo "n"
     else
-        echo "none"
+        echo "null"
     fi
 }
 
