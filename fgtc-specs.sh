@@ -3,7 +3,7 @@
 SERVER_URL=http://127.0.0.1:8000
 
 function get_processors_json {
-    PROCESSOR_MODELS=($(sudo dmidecode --string processor-version))
+    PROCESSOR_MODELS=$(sudo dmidecode --string processor-version)
 
     PROCESSORS_JSON="[]"
     for i in "${!PROCESSOR_MODELS[@]}"; do
@@ -80,13 +80,12 @@ function get_batteries_json {
     echo "$BATTERIES_JSON"
 }
 
-TYPE=other
 MANUFACTURER=($(sudo dmidecode --string system-manufacturer))
 MODEL=$(sudo dmidecode --string system-product-name)
 OPERATING_SYSTEM=$(cat /etc/*-release | awk '/PRETTY_NAME/' | cut -d\" -f2)
 
 BUILD_JSON=$( jq -n \
-    --arg type "$TYPE" \
+    --arg type "$(hostnamectl chassis)" \
     --arg manufacturer "$MANUFACTURER" \
     --arg model "$MODEL" \
     --arg os "$OPERATING_SYSTEM" \
@@ -96,7 +95,18 @@ BUILD_JSON=$( jq -n \
     --argjson processors "$(get_processors_json)" \
     --argjson memory "$(get_memory_json)" \
     --argjson batteries "$(get_batteries_json)" \
-    '{type: $type, manufacturer: $manufacturer, model: $model, operating_system: $os, wired_networking: $wired, wireless_networking: $wireless, bluetooth: $bluetooth, processors: $processors, memory: $memory, batteries: $batteries}'
+    '{
+        type: $type,
+        manufacturer: $manufacturer,
+        model: $model,
+        operating_system: $os,
+        wired_networking: $wired,
+        wireless_networking: $wireless,
+        bluetooth: $bluetooth,
+        processors: $processors,
+        memory: $memory,
+        batteries: $batteries
+    }'
 )
 
 echo $BUILD_JSON
