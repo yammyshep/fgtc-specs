@@ -1,6 +1,6 @@
 #!/bin/bash
 
-SERVER_URL="${SERVER_URL:-http://10.100.2.190}"
+SERVER_URL="${SERVER_URL:-http://10.100.6.12}"
 
 if command -v apt >/dev/null 2>&1; then
     sudo apt install -y jq iw
