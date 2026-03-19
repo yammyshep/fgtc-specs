@@ -130,7 +130,7 @@ function get_storage_json {
                 size: $size
             }]'
         )
-    done <<< $(lsblk -dbnl -o name,tran,rota,size | grep -Ev 'zram|usb')
+    done <<< $(lsblk -dbnl -o name,tran,rota,size,type | grep -Ev 'zram|usb|sr|rom')
     echo "$STORAGE_JSON"
 }
 
