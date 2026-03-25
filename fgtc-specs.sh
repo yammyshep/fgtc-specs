@@ -2,10 +2,24 @@
 
 SERVER_URL="${SERVER_URL:-http://10.100.6.12}"
 
-if command -v apt >/dev/null 2>&1; then
-    sudo apt install -y jq iw
-elif command -v dnf >/dev/null 2>&1; then
-    sudo dnf install -y jq iw
+sudo true
+
+if [[ " $* " != *" --no-updates "* ]]; then
+    if command -v apt >/dev/null 2>&1; then
+        sudo apt update -y
+        sudo apt upgrade -y
+    elif command -v dnf >/dev/null 2>&1; then
+        sudo dnf update -y
+        sudo dnf distro-sync -y
+    fi
+fi
+
+if [[ " $* " != *" --no-prereqs "* ]]; then
+    if command -v apt >/dev/null 2>&1; then
+        sudo apt install -y jq iw
+    elif command -v dnf >/dev/null 2>&1; then
+        sudo dnf install -y jq iw
+    fi
 fi
 
 function get_processors_json {
